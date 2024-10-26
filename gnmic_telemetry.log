@@ -1,0 +1,206 @@
+Subscribing to device: 10.155.0.53:57400
+{
+  "source": "10.155.0.53:57400",
+  "subscription-name": "default-1729925334",
+  "timestamp": 1729925147446018417,
+  "time": "2024-10-26T06:45:47.446018417Z",
+  "prefix": "system-process/cpu-usage[cpuName=7]",
+  "updates": [
+    {
+      "Path": "cpuUsage",
+      "values": {
+        "cpuUsage": 42
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "Ext": {
+        "RegisteredExt": {
+          "id": 1,
+          "msg": "CgtueS1xNTI0MC0xMyILc2Vuc29yXzEwMDcqIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS8yIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS86C2FmdC1zeXNpbmZvQIeAgAFgttbLvKwy"
+        }
+      }
+    }
+  ]
+}
+{
+  "source": "10.155.0.53:57400",
+  "subscription-name": "default-1729925334",
+  "timestamp": 1729925147445959419,
+  "time": "2024-10-26T06:45:47.445959419Z",
+  "prefix": "system-process/cpu-usage[cpuName=1]",
+  "updates": [
+    {
+      "Path": "cpuUsage",
+      "values": {
+        "cpuUsage": 6
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "Ext": {
+        "RegisteredExt": {
+          "id": 1,
+          "msg": "CgtueS1xNTI0MC0xMyILc2Vuc29yXzEwMDcqIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS8yIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS86C2FmdC1zeXNpbmZvQIGAgAFgttbLvKwy"
+        }
+      }
+    }
+  ]
+}
+{
+  "source": "10.155.0.53:57400",
+  "subscription-name": "default-1729925334",
+  "timestamp": 1729925147445926682,
+  "time": "2024-10-26T06:45:47.445926682Z",
+  "prefix": "system-process/cpu-usage[cpuName=0]",
+  "updates": [
+    {
+      "Path": "cpuUsage",
+      "values": {
+        "cpuUsage": 3
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "Ext": {
+        "RegisteredExt": {
+          "id": 1,
+          "msg": "CgtueS1xNTI0MC0xMyILc2Vuc29yXzEwMDcqIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS8yIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS86C2FmdC1zeXNpbmZvQICAgAFgttbLvKwy"
+        }
+      }
+    }
+  ]
+}
+{
+  "source": "10.155.0.53:57400",
+  "subscription-name": "default-1729925334",
+  "timestamp": 1729925147445989616,
+  "time": "2024-10-26T06:45:47.445989616Z",
+  "prefix": "system-process/cpu-usage[cpuName=4]",
+  "updates": [
+    {
+      "Path": "cpuUsage",
+      "values": {
+        "cpuUsage": 6
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "Ext": {
+        "RegisteredExt": {
+          "id": 1,
+          "msg": "CgtueS1xNTI0MC0xMyILc2Vuc29yXzEwMDcqIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS8yIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS86C2FmdC1zeXNpbmZvQISAgAFgttbLvKwy"
+        }
+      }
+    }
+  ]
+}
+{
+  "source": "10.155.0.53:57400",
+  "subscription-name": "default-1729925334",
+  "timestamp": 1729925147445970118,
+  "time": "2024-10-26T06:45:47.445970118Z",
+  "prefix": "system-process/cpu-usage[cpuName=2]",
+  "updates": [
+    {
+      "Path": "cpuUsage",
+      "values": {
+        "cpuUsage": 36
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "Ext": {
+        "RegisteredExt": {
+          "id": 1,
+          "msg": "CgtueS1xNTI0MC0xMyILc2Vuc29yXzEwMDcqIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS8yIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS86C2FmdC1zeXNpbmZvQIKAgAFgttbLvKwy"
+        }
+      }
+    }
+  ]
+}
+{
+  "source": "10.155.0.53:57400",
+  "subscription-name": "default-1729925334",
+  "timestamp": 1729925147445999255,
+  "time": "2024-10-26T06:45:47.445999255Z",
+  "prefix": "system-process/cpu-usage[cpuName=5]",
+  "updates": [
+    {
+      "Path": "cpuUsage",
+      "values": {
+        "cpuUsage": 10
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "Ext": {
+        "RegisteredExt": {
+          "id": 1,
+          "msg": "CgtueS1xNTI0MC0xMyILc2Vuc29yXzEwMDcqIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS8yIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS86C2FmdC1zeXNpbmZvQIWAgAFgttbLvKwy"
+        }
+      }
+    }
+  ]
+}
+{
+  "source": "10.155.0.53:57400",
+  "subscription-name": "default-1729925334",
+  "timestamp": 1729925147446008906,
+  "time": "2024-10-26T06:45:47.446008906Z",
+  "prefix": "system-process/cpu-usage[cpuName=6]",
+  "updates": [
+    {
+      "Path": "cpuUsage",
+      "values": {
+        "cpuUsage": 4
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "Ext": {
+        "RegisteredExt": {
+          "id": 1,
+          "msg": "CgtueS1xNTI0MC0xMyILc2Vuc29yXzEwMDcqIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS8yIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS86C2FmdC1zeXNpbmZvQIaAgAFgttbLvKwy"
+        }
+      }
+    }
+  ]
+}
+{
+  "source": "10.155.0.53:57400",
+  "subscription-name": "default-1729925334",
+  "timestamp": 1729925147445979946,
+  "time": "2024-10-26T06:45:47.445979946Z",
+  "prefix": "system-process/cpu-usage[cpuName=3]",
+  "updates": [
+    {
+      "Path": "cpuUsage",
+      "values": {
+        "cpuUsage": 6
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "Ext": {
+        "RegisteredExt": {
+          "id": 1,
+          "msg": "CgtueS1xNTI0MC0xMyILc2Vuc29yXzEwMDcqIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS8yIi9qdW5vcy9zeXN0ZW0vbGluZWNhcmQvY3B1L21lbW9yeS86C2FmdC1zeXNpbmZvQIOAgAFgttbLvKwy"
+        }
+      }
+    }
+  ]
+}
+{
+  "sync-response": true
+}
+
+received signal 'terminated'. terminating...
