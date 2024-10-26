@@ -303,8 +303,8 @@ service:
 EOF'
     echo "OpenTelemetry Collector installed and configuration file created at /etc/otelcol/otel-collector-config.yaml"
 
-    # Log to README.md
-    echo -e "OpenTelemetry Collector configuration:\n/etc/otelcol/otel-collector-config.yaml\n" >> README.md
+    # Log to URL.md
+    echo -e "OpenTelemetry Collector configuration:\n/etc/otelcol/otel-collector-config.yaml\n" >> URL.md
     wait_for_service "otelcol"
 }
 
@@ -363,8 +363,8 @@ scrape_configs:
 EOF'
     echo "Prometheus installed and configuration file created at /etc/prometheus/prometheus.yml"
 
-    # Log to README.md
-    echo -e "Prometheus configuration:\n/etc/prometheus/prometheus.yml\n" >> README.md
+    # Log to URL.md
+    echo -e "Prometheus configuration:\n/etc/prometheus/prometheus.yml\n" >> URL.md
     wait_for_service "prometheus"
 }
 
@@ -382,7 +382,7 @@ install_telegraf() {
     sudo apt-get install -y telegraf
     sudo systemctl enable telegraf
     sudo systemctl start telegraf
-    echo -e "Telegraf configuration path:\n/etc/telegraf/telegraf.conf\n" >> README.md
+    echo -e "Telegraf configuration path:\n/etc/telegraf/telegraf.conf\n" >> URL.md
     wait_for_service "telegraf"
 }
 
