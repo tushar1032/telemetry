@@ -84,11 +84,19 @@ echo "Testing SSH connection to GitHub..."
 SSH_OUTPUT=$(ssh -T git@github.com 2>&1)
 if [[ "$SSH_OUTPUT" == *"You've successfully authenticated"* ]]; then
     echo "SSH connection to GitHub was successful."
+elif [[ "$SSH_OUTPUT" == *"Permission denied (publickey)"* ]]; then
+    echo "SSH connection to GitHub failed due to missing public key."
+    echo "Please ensure your SSH key is added to your GitHub account under Settings > SSH and GPG keys > New SSH key."
+    echo "Copy the SSH key below and add it to your GitHub account:"
+    cat "$HOME/.ssh/id_ed25519.pub"
+    echo -e "\nAfter adding the SSH key, re-run the script.\n"
+    exit 1
 else
     echo "SSH connection to GitHub failed. Ensure the SSH key is added to your GitHub account."
     echo "Output from SSH: $SSH_OUTPUT"
     exit 1
 fi
+
 
 
 # Initialize Git repository if not already initialized
