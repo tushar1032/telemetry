@@ -5,18 +5,22 @@ if ! command -v git &> /dev/null; then
     echo "Git is not installed. Installing Git..."
     sudo apt-get update
     sudo apt-get install -y git
+    if [ $? -ne 0 ]; then
+        echo "Failed to install Git. Please check your network connection or permissions."
+        exit 1
+    fi
     echo "Git installed successfully."
 else
     echo "Git is already installed."
 fi
 
-# Configuration file for storing GitHub info
+# Configuration files
 CONFIG_FILE=".git_config"
+DIR_CONFIG_FILE=".git_dir_config"
 LARGE_FILE_SIZE=100000000  # Set the size threshold to 100 MB (GitHub's limit)
 
 # Load or prompt for GitHub user information
 load_or_prompt_user_info() {
-    # Check if .git_config exists and load existing configuration
     if [ -f "$CONFIG_FILE" ]; then
         source "$CONFIG_FILE"
         echo "Current Git configuration:"
@@ -30,7 +34,6 @@ load_or_prompt_user_info() {
         choice="change"
     fi
 
-    # If user wants to change or no config exists, prompt for new information
     if [ "$choice" == "change" ] || [ -z "$GITHUB_USER" ] || [ -z "$GITHUB_EMAIL" ] || [ -z "$REPO_NAME" ]; then
         while [[ -z "$GITHUB_USER" ]]; do
             read -p "Enter your GitHub username (e.g., surajnsharma): " GITHUB_USER
@@ -48,6 +51,10 @@ load_or_prompt_user_info() {
         echo "REPO_NAME=\"$REPO_NAME\"" >> "$CONFIG_FILE"
         echo "Configuration saved to $CONFIG_FILE"
     fi
+
+    # Set global Git configurations if not already set
+    git config --global user.name "$GITHUB_USER"
+    git config --global user.email "$GITHUB_EMAIL"
 }
 
 # Load or prompt for GitHub user information
@@ -57,6 +64,10 @@ load_or_prompt_user_info
 if [ ! -f "$HOME/.ssh/id_ed25519" ]; then
     echo "Generating SSH key..."
     ssh-keygen -t ed25519 -C "$GITHUB_EMAIL" -f "$HOME/.ssh/id_ed25519" -q -N ""
+    if [ $? -ne 0 ]; then
+        echo "Failed to generate SSH key. Please check your permissions and try again."
+        exit 1
+    fi
     echo "SSH key generated."
 else
     echo "SSH key already exists. Key location: $HOME/.ssh/id_ed25519"
@@ -69,12 +80,25 @@ echo -e "\nPress Enter after adding the SSH key to GitHub..."
 read -p ""
 
 # Test SSH connection to GitHub
-ssh -T git@github.com
+echo "Testing SSH connection to GitHub..."
+SSH_OUTPUT=$(ssh -T git@github.com 2>&1)
+if [[ "$SSH_OUTPUT" == *"You've successfully authenticated"* ]]; then
+    echo "SSH connection to GitHub was successful."
+else
+    echo "SSH connection to GitHub failed. Ensure the SSH key is added to your GitHub account."
+    echo "Output from SSH: $SSH_OUTPUT"
+    exit 1
+fi
+
 
 # Initialize Git repository if not already initialized
 if [ ! -d ".git" ]; then
     echo "Initializing Git repository..."
     git init
+    if [ $? -ne 0 ]; then
+        echo "Failed to initialize Git repository. Check directory permissions."
+        exit 1
+    fi
 fi
 
 # Set remote URL to use SSH, or update it if it already exists
@@ -87,6 +111,31 @@ else
     git remote add origin "$REMOTE_URL"
 fi
 git remote -v
+
+# Load or prompt for directory to stage and commit files
+load_or_prompt_directory() {
+    if [ -f "$DIR_CONFIG_FILE" ]; then
+        source "$DIR_CONFIG_FILE"
+        echo "Default directory for staging files: $TARGET_DIR"
+        echo -e "\nPress Enter to keep this directory or type a new directory path to change."
+        read -p "" new_dir
+        if [ ! -z "$new_dir" ]; then
+            TARGET_DIR="$new_dir"
+        fi
+    else
+        read -p "Enter the directory to stage and commit files (e.g., /home/user/project): " TARGET_DIR
+    fi
+
+    # Save chosen directory to .git_dir_config file
+    echo "TARGET_DIR=\"$TARGET_DIR\"" > "$DIR_CONFIG_FILE"
+    echo "Directory saved to $DIR_CONFIG_FILE"
+}
+
+# Load or prompt for staging directory
+load_or_prompt_directory
+
+# Navigate to the specified directory
+cd "$TARGET_DIR" || { echo "Directory $TARGET_DIR does not exist. Exiting."; exit 1; }
 
 # Check branch and set to main
 echo "Setting branch to 'main'..."
@@ -106,21 +155,36 @@ if ! command -v git-lfs &> /dev/null; then
     echo "Installing Git LFS..."
     sudo apt-get install -y git-lfs
     git lfs install
+    if [ $? -ne 0 ]; then
+        echo "Failed to install Git LFS. Please check your network connection or permissions."
+        exit 1
+    fi
 fi
 
-# Automatically detect large files and track them with Git LFS
+# Automatically detect large files and attempt to track them with Git LFS
 echo "Detecting files larger than $(($LARGE_FILE_SIZE / 1000000)) MB..."
 find . -type f -size +${LARGE_FILE_SIZE}c -not -path "./.git/*" | while read -r large_file; do
     echo "Tracking large file with Git LFS: $large_file"
     git lfs track "$large_file"
     git add .gitattributes
     git add "$large_file"
-    git commit -m "Add large file $large_file with Git LFS"
+    git commit -m "Add large file $large_file with Git LFS" || {
+        echo "Failed to commit $large_file due to GitHub size restrictions."
+        echo "Consider one of the following options for $large_file:"
+        echo "1. Use an external storage solution (e.g., Google Drive, Dropbox) and link to the file."
+        echo "2. Compress the file to reduce its size."
+        echo "3. Remove the file from the repository and add it to .gitignore if it doesn't need to be versioned."
+        echo "Skipping $large_file."
+    }
 done
 
 # Push to GitHub
 echo "Pushing to GitHub..."
 git push -u origin main
+if [ $? -ne 0 ]; then
+    echo "Push failed. Please check your repository settings and access rights."
+    exit 1
+fi
 
 echo "Repository setup and push complete. Any new changes have been committed and pushed."
 
