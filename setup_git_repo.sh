@@ -12,7 +12,7 @@ fi
 
 # Configuration file for storing GitHub info
 CONFIG_FILE=".git_config"
-LARGE_FILE="prometheus-2.54.1.linux-amd64.tar.gz"  # Specify any large file to track with Git LFS
+LARGE_FILE_SIZE=100000000  # Set the size threshold to 100 MB (GitHub's limit)
 
 # Load or prompt for GitHub user information
 load_or_prompt_user_info() {
@@ -31,10 +31,16 @@ load_or_prompt_user_info() {
     fi
 
     # If user wants to change or no config exists, prompt for new information
-    if [ "$choice" == "change" ]; then
-        read -p "Enter your GitHub username (e.g., surajnsharma): " GITHUB_USER
-        read -p "Enter your GitHub email (e.g., surajshamra@juniper.net): " GITHUB_EMAIL
-        read -p "Enter the name of the repository (e.g., telemetry): " REPO_NAME
+    if [ "$choice" == "change" ] || [ -z "$GITHUB_USER" ] || [ -z "$GITHUB_EMAIL" ] || [ -z "$REPO_NAME" ]; then
+        while [[ -z "$GITHUB_USER" ]]; do
+            read -p "Enter your GitHub username (e.g., surajnsharma): " GITHUB_USER
+        done
+        while [[ -z "$GITHUB_EMAIL" ]]; do
+            read -p "Enter your GitHub email (e.g., surajshamra@juniper.net): " GITHUB_EMAIL
+        done
+        while [[ -z "$REPO_NAME" ]]; do
+            read -p "Enter the name of the repository (e.g., telemetry): " REPO_NAME
+        done
 
         # Save new configuration to .git_config file
         echo "GITHUB_USER=\"$GITHUB_USER\"" > "$CONFIG_FILE"
@@ -102,20 +108,17 @@ if ! command -v git-lfs &> /dev/null; then
     git lfs install
 fi
 
-# Track large files with Git LFS if specified file exists
-if [ -f "$LARGE_FILE" ]; then
-    echo "Tracking large file with Git LFS..."
-    git lfs track "$LARGE_FILE"
+# Automatically detect large files and track them with Git LFS
+echo "Detecting files larger than $(($LARGE_FILE_SIZE / 1000000)) MB..."
+find . -type f -size +${LARGE_FILE_SIZE}c -not -path "./.git/*" | while read -r large_file; do
+    echo "Tracking large file with Git LFS: $large_file"
+    git lfs track "$large_file"
     git add .gitattributes
-    git commit -m "Track large files using Git LFS"
-    git rm --cached "$LARGE_FILE"
-    git add "$LARGE_FILE"
-    git commit -m "Add large file with Git LFS"
-else
-    echo "Large file $LARGE_FILE not found. Skipping Git LFS tracking."
-fi
+    git add "$large_file"
+    git commit -m "Add large file $large_file with Git LFS"
+done
 
-# Push to GitHub, handling updates
+# Push to GitHub
 echo "Pushing to GitHub..."
 git push -u origin main
 
