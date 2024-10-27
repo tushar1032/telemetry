@@ -19,7 +19,7 @@ Ensure git, curl, and wget are installed. The script will install these if they 
 - git clone https://github.com/surajnsharma/telemetry.git
 - cd telemetry
 2. Run the Main Script:
-- Run ./run_telemetry.sh and select from the following options:
+- Run ./setup_telemetry.sh and select from the following options:
 - 1) Configure Telegraf: Sets up and verifies the Telegraf configuration.
 - 2) Run GNMIc: Subscribes to gNMI telemetry from configured devices.
 - 3) Install/Uninstall: Installs/Uninstall and configures services.
@@ -55,7 +55,7 @@ Ensure git, curl, and wget are installed. The script will install these if they 
 - This setup supports Git LFS for managing large files. If you encounter large files that GitHub rejects, consider external storage solutions or reducing the file size.
 
 ### Example Usage:
-- To configure Telegraf: Run the main script (./run_telemetry.sh), select 1) Configure Telegraf, and follow the prompts.
+- To configure Telegraf: Run the main script (./setup_telemetry.sh), select 1) Configure Telegraf, and follow the prompts.
 - To install all services: From the main script menu, select 3) Install, then 5) All.
 - To test Prometheus and OpenTelemetry integration: After installation, run:
 - curl http://localhost:9273/metrics for Telegraf metrics in Prometheus format.
@@ -77,7 +77,7 @@ config_telegraf.sh gnmic_0.38.2_linux_x86_64.tar.gz
 gnmic_telemetry.log otelcol_0.111.0_linux_amd64.tar.gz 
 README.md setup_git_repo.sh test.sh config_telegraf.sh.org 
 gnmic.sh install.sh otel-collector-config.yaml 
-run_telemetry.sh 
+setup_telemetry.sh
 telegraf_generated.conf 
 devices.text gnmic.sh.org 
 install.sh.org otelcol.log 
@@ -102,7 +102,7 @@ root@q-dell-srv01:~/suraj# cat sensor.text
 
 
 ## Install telemetry package ##
-root@q-dell-srv02:~/suraj/telemetry# ./run_telemetry.sh 
+root@q-dell-srv02:~/suraj/telemetry# ./setup_telemetry.sh 
 Choose a script to run:
     1) Configure Telegraf
     2) Run GNMIc
@@ -115,7 +115,7 @@ Running install.sh... Choose an action:
     3) Check status of services
     4) Restart services
     5) Troubleshooting
-    6) Back to main script (run_telemetry.sh) 
+    6) Back to main script (setup_telemetry.sh) 
 Enter your choice: 1 
 Choose services to install:
    1) Telegraf
@@ -179,7 +179,7 @@ Returning to main menu... Choose an action:
     3) Check status of services
     4) Restart services
     5) Troubleshooting
-    6) Back to main script (run_telemetry.sh) 
+    6) Back to main script (setup_telemetry.sh) 
 Enter your choice: 3 
 
 Checking the status of all services... 
@@ -212,7 +212,7 @@ Choose an action:
     3) Check status of services
     4) Restart services
     5) Troubleshooting
-    6) Back to main script (run_telemetry.sh) 
+    6) Back to main script (setup_telemetry.sh) 
     Enter your choice:
 
 ## END ##
