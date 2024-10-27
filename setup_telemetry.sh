@@ -28,7 +28,7 @@ run_menu() {
         echo "Choose a script to run:"
         echo "1) Configure Telegraf"
         echo "2) Run GNMIc"
-        echo "3) Install/UnInstall"
+        echo "3) Install/UnInstall/Verify"
         echo "4) Exit"
         read -p "Enter your choice (1-4): " user_choice
 

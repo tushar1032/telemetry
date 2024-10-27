@@ -1,22 +1,13 @@
 #!/bin/bash
 
-# Ensure Git is installed
-if ! command -v git &> /dev/null; then
-    echo "Git is not installed. Installing Git..."
-    sudo apt-get update
-    sudo apt-get install -y git
-    if [ $? -ne 0 ]; then
-        echo "Failed to install Git. Please check your network connection or permissions."
-        exit 1
-    fi
-    echo "Git installed successfully."
-else
-    echo "Git is already installed."
-fi
+# Enable logging to a file
+LOG_FILE="setup_git_repo.log"
+exec > >(tee -i "$LOG_FILE")
+exec 2>&1
 
-# Configuration files
+# Configuration files and size threshold for large files
 CONFIG_FILE=".git_config"
-LARGE_FILE_SIZE=100000000  # Set the size threshold to 100 MB (GitHub's limit)
+LARGE_FILE_SIZE=100000000  # 100 MB (GitHub's limit for non-LFS files)
 
 # Load or prompt for GitHub user information
 load_or_prompt_user_info() {
@@ -72,61 +63,8 @@ set_remote_url() {
     git remote set-url origin "$REMOTE_URL"
 }
 
-# Ask user if they want to update (pull) or push changes
-echo "Choose an action:"
-echo "1) Update (pull latest changes)"
-echo "2) Push new changes (requires SSH access)"
-read -p "Enter your choice (1 for update, 2 for push): " user_action
-
-if [ "$user_action" == "1" ]; then
-    # Set remote to HTTPS for pulling
-    set_remote_url "pull"
-    
-    # Check if there are any local changes
-    if [ -n "$(git status --porcelain)" ]; then
-        echo "Local changes detected. Do you want to keep these local changes and ignore the remote changes?"
-        read -p "Enter 'yes' to keep local changes or 'no' to override with remote changes: " keep_local_choice
-
-        if [ "$keep_local_choice" == "yes" ]; then
-            echo "Stashing local changes temporarily..."
-            git stash push -m "Auto-stash before pull"
-            echo "Pulling latest changes from remote..."
-            git pull origin main
-            echo "Applying stashed changes..."
-            git stash pop
-            if [ $? -ne 0 ]; then
-                echo "Merge conflicts detected. Please resolve conflicts and commit changes manually."
-                exit 1
-            fi
-            echo "Local changes applied on top of remote updates."
-        else
-            echo "Overriding local changes and pulling the latest updates..."
-            git reset --hard
-            git pull origin main
-            if [ $? -ne 0 ]; then
-                echo "Failed to pull changes from the remote repository. Please resolve any conflicts and try again."
-                exit 1
-            fi
-            echo "Local repository successfully updated."
-        fi
-    else
-        # Pull latest changes from the remote repository
-        echo "Updating local repository with latest changes from remote..."
-        git pull origin main
-        if [ $? -ne 0 ]; then
-            echo "Failed to pull changes from the remote repository. Please resolve any conflicts and try again."
-            exit 1
-        fi
-        echo "Local repository successfully updated."
-    fi
-    exit 0  # Exit after updating
-fi
-
-# Proceed with SSH setup if the user chose to push changes
-if [ "$user_action" == "2" ]; then
-    # Set remote to SSH for pushing
-    set_remote_url "push"
-    
+# Function to manage SSH keys
+setup_ssh_key() {
     # Check if SSH key exists; generate if missing
     if [ ! -f "$HOME/.ssh/id_ed25519" ]; then
         echo "Generating SSH key..."
@@ -163,6 +101,55 @@ if [ "$user_action" == "2" ]; then
         echo "Output from SSH: $SSH_OUTPUT"
         exit 1
     fi
+}
+
+# Ask user if they want to update (pull) or push changes
+echo "Choose an action:"
+echo "1) Update (pull latest changes)"
+echo "2) Push new changes (requires SSH access)"
+read -p "Enter your choice (1 for update, 2 for push): " user_action
+
+# Function to track large files with Git LFS
+track_large_files_with_lfs() {
+    echo "Checking for files larger than $(($LARGE_FILE_SIZE / 1000000)) MB to track with Git LFS..."
+    find . -type f -size +${LARGE_FILE_SIZE}c -not -path "./.git/*" | while read -r large_file; do
+        echo "Tracking large file with Git LFS: $large_file"
+        git lfs track "$large_file"
+        git add .gitattributes
+        git add "$large_file"
+        git commit -m "Track large file $large_file with Git LFS"
+    done
+}
+
+if [ "$user_action" == "1" ]; then
+    # Set remote to HTTPS for pulling
+    set_remote_url "pull"
+
+    # Automatically resolve conflicts by resetting any unmerged changes
+    echo "Resetting any unmerged changes..."
+    git reset --hard
+    
+    # Pull latest changes from the remote repository
+    echo "Pulling latest changes from remote..."
+    git pull origin main --strategy-option=theirs
+    if [ $? -ne 0 ]; then
+        echo "Failed to pull changes from the remote repository. Please resolve any issues and try again."
+        exit 1
+    fi
+    echo "Local repository successfully updated."
+    exit 0  # Exit after updating
+fi
+
+# Proceed with SSH setup if the user chose to push changes
+if [ "$user_action" == "2" ]; then
+    # Set remote to SSH for pushing
+    set_remote_url "push"
+    
+    # SSH setup for pushing (only for admins)
+    setup_ssh_key
+
+    # Track large files automatically with Git LFS
+    track_large_files_with_lfs
 
     # Stage and push changes
     echo "Staging and committing changes..."
