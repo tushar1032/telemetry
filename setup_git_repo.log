@@ -1,0 +1,17 @@
+Git and Git LFS are set up successfully.
+Current Git configuration:
+GitHub Username: surajnsharma
+GitHub Email: surajshamra@juniper.net
+Repository Name: telemetry
+Remote URL: git@github.com:surajnsharma/telemetry.git
+
+Press Enter to keep this configuration or type 'change' to update.
+Choose an action:
+1) Update (pull latest changes)
+2) Push new changes (requires SSH access)
+Enter your choice (1 for update, 2 for push): Copy the SSH key below and add it to your GitHub account under Settings > SSH and GPG keys > New SSH key:
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMkbK4spQ2FwUVJLBGmoT1bXPz0BoNNw0BGttugSTFiz 
+
+Press Enter after adding the SSH key to GitHub...
+Detecting files larger than 100 MB...
+Staging and committing changes...
