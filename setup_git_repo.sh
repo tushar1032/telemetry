@@ -9,34 +9,6 @@ exec 2>&1
 CONFIG_FILE=".git_config"
 LARGE_FILE_SIZE=100000000  # 100 MB (GitHub's limit for non-LFS files)
 
-# Ensure Git is installed
-if ! command -v git &> /dev/null; then
-    echo "Git is not installed. Installing Git..."
-    sudo apt-get update
-    sudo apt-get install -y git
-    if [ $? -ne 0 ]; then
-        echo "Failed to install Git. Please check your network connection or permissions."
-        exit 1
-    fi
-    echo "Git installed successfully."
-else
-    echo "Git is already installed."
-fi
-
-# Install Git LFS if not already installed
-if ! command -v git-lfs &> /dev/null; then
-    echo "Git LFS is not installed. Installing Git LFS..."
-    sudo apt-get install -y git-lfs
-    git lfs install
-    if [ $? -ne 0 ]; then
-        echo "Failed to install Git LFS. Please check your network connection or permissions."
-        exit 1
-    fi
-    echo "Git LFS installed successfully."
-else
-    echo "Git LFS is already installed."
-fi
-
 # Load or prompt for GitHub user information
 load_or_prompt_user_info() {
     if [ -f "$CONFIG_FILE" ]; then
@@ -152,44 +124,19 @@ track_large_files_with_lfs() {
 if [ "$user_action" == "1" ]; then
     # Set remote to HTTPS for pulling
     set_remote_url "pull"
-    
-    # Check if there are any local changes
-    if [ -n "$(git status --porcelain)" ]; then
-        echo "Local changes detected. Do you want to keep these local changes and ignore the remote changes?"
-        read -p "Enter 'yes' to keep local changes or 'no' to override with remote changes: " keep_local_choice
 
-        if [ "$keep_local_choice" == "yes" ]; then
-            echo "Stashing local changes temporarily..."
-            git stash push -m "Auto-stash before pull"
-            echo "Pulling latest changes from remote..."
-            git pull origin main
-            echo "Applying stashed changes..."
-            git stash pop
-            if [ $? -ne 0 ]; then
-                echo "Merge conflicts detected. Please resolve conflicts and commit changes manually."
-                exit 1
-            fi
-            echo "Local changes applied on top of remote updates."
-        else
-            echo "Overriding local changes and pulling the latest updates..."
-            git reset --hard
-            git pull origin main
-            if [ $? -ne 0 ]; then
-                echo "Failed to pull changes from the remote repository. Please resolve any conflicts and try again."
-                exit 1
-            fi
-            echo "Local repository successfully updated."
-        fi
-    else
-        # Pull latest changes from the remote repository
-        echo "Updating local repository with latest changes from remote..."
-        git pull origin main
-        if [ $? -ne 0 ]; then
-            echo "Failed to pull changes from the remote repository. Please resolve any conflicts and try again."
-            exit 1
-        fi
-        echo "Local repository successfully updated."
+    # Automatically resolve conflicts by resetting any unmerged changes
+    echo "Resetting any unmerged changes..."
+    git reset --hard
+    
+    # Pull latest changes from the remote repository
+    echo "Pulling latest changes from remote..."
+    git pull origin main --strategy-option=theirs
+    if [ $? -ne 0 ]; then
+        echo "Failed to pull changes from the remote repository. Please resolve any issues and try again."
+        exit 1
     fi
+    echo "Local repository successfully updated."
     exit 0  # Exit after updating
 fi
 
@@ -215,4 +162,5 @@ if [ "$user_action" == "2" ]; then
     fi
     echo "Changes successfully pushed to the remote repository."
 fi
+
 
