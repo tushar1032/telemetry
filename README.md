@@ -1,8 +1,9 @@
 
-## All In One Telemetry ## 
 
 Author: surajsharma@juniper.net 
+--------------------------------
 
+## All In One Telemetry ## 
 User Instructions:
 
 This setup script deploys and manages the following telemetry components:
