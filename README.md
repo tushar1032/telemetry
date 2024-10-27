@@ -106,3 +106,4 @@ Configuration file paths: OpenTelemetry Collector: /etc/otelcol/otel-collector-c
     Troubleshooting
     Back to main script (run_telemetry.sh) Enter your choice:
 
+## END ##
