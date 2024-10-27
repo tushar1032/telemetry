@@ -45,10 +45,10 @@ load_or_prompt_user_info() {
 
     if [ "$choice" == "change" ] || [ -z "$GITHUB_USER" ] || [ -z "$GITHUB_EMAIL" ] || [ -z "$REPO_NAME" ]; then
         while [[ -z "$GITHUB_USER" ]]; do
-            read -p "Enter your GitHub username (e.g., surajnsharma): " GITHUB_USER
+            read -p "Enter your GitHub username (e.g., username): " GITHUB_USER
         done
         while [[ -z "$GITHUB_EMAIL" ]]; do
-            read -p "Enter your GitHub email (e.g., surajshamra@juniper.net): " GITHUB_EMAIL
+            read -p "Enter your GitHub email (e.g., username@juniper.net): " GITHUB_EMAIL
         done
         while [[ -z "$REPO_NAME" ]]; do
             read -p "Enter the name of the repository (e.g., telemetry): " REPO_NAME
