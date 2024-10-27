@@ -1,4 +1,4 @@
-OpenTelemetry Collector Core Distro
+## All In One Telemetry ## 
 
 Author: surajsharma@juniper.net User Instruction: "
 Author: surajsharma@juniper.net
