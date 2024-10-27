@@ -1,5 +1,15 @@
 #!/bin/bash
 
+
+# Set variables for gnmic binary, download URL, and file paths
+GNMIC_BINARY="gnmic"
+LOCAL_GNMIC_PACKAGE="gnmic_0.38.2_linux_x86_64.tar.gz"  # Adjust version as needed
+DOWNLOAD_URL="https://github.com/openconfig/gnmic/releases/download/v0.38.2/$LOCAL_GNMIC_PACKAGE"
+GNMIC_PATH="/usr/local/bin/$GNMIC_BINARY"
+DEVICES_FILE="devices.text"
+SENSOR_FILE="sensor.text"
+OUTPUT_FILE="gnmic_telemetry.log"
+
 # Function to check if a service is running
 check_service_status() {
     service_name=$1
@@ -207,6 +217,7 @@ restart_service() {
     echo "Restarting $service_name..."
     sudo systemctl restart $service_name
     wait_for_service "$service_name"
+     main_menu
 }
 
 # Function to uninstall a service
@@ -292,8 +303,8 @@ service:
 EOF'
     echo "OpenTelemetry Collector installed and configuration file created at /etc/otelcol/otel-collector-config.yaml"
 
-    # Log to README.md
-    echo -e "OpenTelemetry Collector configuration:\n/etc/otelcol/otel-collector-config.yaml\n" >> README.md
+    # Log to URL.md
+    echo -e "OpenTelemetry Collector configuration:\n/etc/otelcol/otel-collector-config.yaml\n" >> URL.md
     wait_for_service "otelcol"
 }
 
@@ -352,8 +363,8 @@ scrape_configs:
 EOF'
     echo "Prometheus installed and configuration file created at /etc/prometheus/prometheus.yml"
 
-    # Log to README.md
-    echo -e "Prometheus configuration:\n/etc/prometheus/prometheus.yml\n" >> README.md
+    # Log to URL.md
+    echo -e "Prometheus configuration:\n/etc/prometheus/prometheus.yml\n" >> URL.md
     wait_for_service "prometheus"
 }
 
@@ -371,39 +382,88 @@ install_telegraf() {
     sudo apt-get install -y telegraf
     sudo systemctl enable telegraf
     sudo systemctl start telegraf
-    echo -e "Telegraf configuration path:\n/etc/telegraf/telegraf.conf\n" >> README.md
+    echo -e "Telegraf configuration path:\n/etc/telegraf/telegraf.conf\n" >> URL.md
     wait_for_service "telegraf"
 }
 
-# Function to install all services with checks and log paths
-install_services() {
-    install_opentelemetry_collector
-    install_telegraf
-    install_prometheus
-    echo "All services installed and running."
 
-    # Notify user and log paths
-    echo -e "\nServices have been installed and the configuration files are stored at the following locations:\n"
-    echo "/etc/otelcol/otel-collector-config.yaml"
-    echo "/etc/prometheus/prometheus.yml"
-    echo -e "\nThe paths are also logged in README.md."
+# Function to download gnmic from local package if available, else download from the web
+download_gnmic() {
+    if [[ -f "$GNMIC_PATH" ]]; then
+        echo "gnmic is already installed at $GNMIC_PATH."
+    elif [[ -f "$LOCAL_GNMIC_PACKAGE" ]]; then
+        echo "Local gnmic package found. Installing gnmic from local file..."
+        sudo tar -xzf "$LOCAL_GNMIC_PACKAGE" -C /usr/local/bin
+        if [[ -f "$GNMIC_PATH" ]]; then
+            echo "gnmic installed successfully from local package."
+        else
+            echo "Failed to install gnmic from local package."
+            exit 1
+        fi
+    else
+        echo "Local package not found. Downloading gnmic from the web..."
+        curl -sLO $DOWNLOAD_URL
+        if [[ -f "$LOCAL_GNMIC_PACKAGE" ]]; then
+            sudo tar -xzf "$LOCAL_GNMIC_PACKAGE" -C /usr/local/bin
+            echo "gnmic downloaded and installed successfully."
+        else
+            echo "Failed to download gnmic."
+            exit 1
+        fi
+    fi
+}
 
-    # Check if ports are active and listening
-    #check_telegraf_status
-    #check_opentelemetry_status
-
-    # Update user with web link for Prometheus
-    #check_prometheus_status
+# Function to uninstall gnmic
+uninstall_gnmic() {
+    if [[ -f "$GNMIC_PATH" ]]; then
+        echo "Uninstalling gnmic..."
+        sudo rm -f "$GNMIC_PATH"
+        
+        if [[ ! -f "$GNMIC_PATH" ]]; then
+            echo "gnmic uninstalled successfully."
+        else
+            echo "Failed to uninstall gnmic."
+            exit 1
+        fi
+    else
+        echo "gnmic is not installed."
+    fi
 }
 
 
-# Function to uninstall all services
 uninstall_services() {
-    uninstall_service "otelcol"
-    uninstall_service "telegraf"
-    uninstall_service "prometheus"
-    echo "Services uninstalled."
+    while true; do
+        echo "Choose services to uninstall:"
+        echo "1) Telegraf"
+        echo "2) Prometheus"
+        echo "3) OpenTelemetry Collector"
+        echo "4) gnmic"
+        echo "5) All"
+        echo "6) Back to main menu"
+        read -p "Enter your choice (e.g., 1 3 for Telegraf and OpenTelemetry): " uninstall_choice
+
+        case $uninstall_choice in
+            *1*) uninstall_service "telegraf" ;;
+            *2*) uninstall_service "prometheus" ;;
+            *3*) uninstall_service "otelcol" ;;
+            *4*) uninstall_gnmic ;;
+            5)
+                uninstall_service "telegraf"
+                uninstall_service "prometheus"
+                uninstall_service "otelcol"
+                uninstall_gnmic
+                ;;
+            6)
+                echo "Returning to main menu..."
+                main_menu
+                break
+                ;;
+            *) echo "Invalid choice. Please try again." ;;
+        esac
+    done
 }
+
+
 
 # Function to check the status of all services
 check_services_status() {
@@ -433,6 +493,7 @@ check_services_status() {
     echo "OpenTelemetry Collector: /etc/otelcol/otel-collector-config.yaml"
     echo "Telegraf: /etc/telegraf/telegraf.conf"
     echo "Prometheus: /etc/prometheus/prometheus.yml"
+     main_menu
 }
 
 # Function to restart all services
@@ -473,8 +534,41 @@ troubleshoot_telegraf() {
     echo "   curl http://localhost:9273/metrics"
     echo "11. Kill all Telegraf processes if needed to reset:"
     echo "   sudo pkill telegraf"
+    main_menu
 }
 
+
+install_services() {
+    while true; do
+        echo "Choose services to install:"
+        echo "1) Telegraf"
+        echo "2) Prometheus"
+        echo "3) OpenTelemetry Collector"
+        echo "4) gnmic"
+        echo "5) All"
+        echo "6) Back to main menu"
+        read -p "Enter your choice (e.g., 1 3 for Telegraf and OpenTelemetry): " install_choice
+
+        case $install_choice in
+            *1*) install_telegraf ;;
+            *2*) install_prometheus ;;
+            *3*) install_opentelemetry_collector ;;
+            *4*) download_gnmic ;;
+            5) 
+                install_telegraf
+                install_prometheus
+                install_opentelemetry_collector
+                download_gnmic
+                ;;
+            6) 
+                echo "Returning to main menu..."
+                main_menu
+                break
+                ;;
+            *) echo "Invalid choice. Please try again." ;;
+        esac
+    done
+}
 
 # Main menu
 main_menu() {
@@ -484,6 +578,7 @@ main_menu() {
     echo "3) Check status of services"
     echo "4) Restart services"
     echo "5) Troubleshooting"
+    echo "6) Back to main script (run_telemetry.sh)"
     read -p "Enter your choice: " user_choice
     case $user_choice in
         1) install_services ;;
@@ -491,9 +586,11 @@ main_menu() {
         3) check_services_status ;;
         4) restart_services_menu ;;
         5) troubleshoot_telegraf ;;
+        6) echo "Returning to main script..."; exit 0 ;;  # Exits install.sh
         *) echo "Invalid choice." ;;
     esac
 }
+
 
 # Menu for restarting services
 restart_services_menu() {
@@ -515,6 +612,7 @@ restart_services_menu() {
             restart_all_services
             ;;
     esac
+    main_menu
 }
 
 # Run the main menu

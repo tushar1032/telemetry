@@ -10,6 +10,21 @@ DEVICES_FILE="devices.text"
 SENSOR_FILE="sensor.text"
 OUTPUT_FILE="gnmic_telemetry.log"
 
+# Set default download URLs and filenames
+DEFAULT_GNMIC_URL="https://github.com/openconfig/gnmic/releases/download/v0.38.2/gnmic_0.38.2_linux_x86_64.tar.gz"
+DEFAULT_PROMETHEUS_URL="https://github.com/prometheus/prometheus/releases/download/v2.54.1/prometheus-2.54.1.linux-amd64.tar.gz"
+DEFAULT_OTELCOL_URL="https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.111.0/otelcol_0.111.0_linux_amd64.tar.gz"
+
+
+# Function to get a URL from the user or use the default if no input is provided
+get_download_url() {
+    local prompt="$1"
+    local default_url="$2"
+    read -p "$prompt (Default: $default_url): " user_url
+    echo "${user_url:-$default_url}"  # Use user input if provided, otherwise the default
+}
+
+
 # Function to check if a service is running
 check_service_status() {
     service_name=$1
@@ -21,6 +36,51 @@ check_service_status() {
         return 1
     fi
 }
+
+# Get URLs from user input or use defaults
+GNMIC_URL=$(get_download_url "Enter gnmic download URL" "$DEFAULT_GNMIC_URL")
+PROMETHEUS_URL=$(get_download_url "Enter Prometheus download URL" "$DEFAULT_PROMETHEUS_URL")
+OTELCOL_URL=$(get_download_url "Enter OpenTelemetry Collector download URL" "$DEFAULT_OTELCOL_URL")
+
+# Function to derive filename from URL
+get_filename_from_url() {
+    local url="$1"
+    echo "${url##*/}"  # Extract filename from URL
+}
+
+# Derived filenames from URLs
+GNMIC_PACKAGE=$(get_filename_from_url "$GNMIC_URL")
+PROMETHEUS_PACKAGE=$(get_filename_from_url "$PROMETHEUS_URL")
+OTELCOL_PACKAGE=$(get_filename_from_url "$OTELCOL_URL")
+
+
+# Function to download gnmic from local package if available, else download from the web
+download_gnmic() {
+    if [[ -f "$GNMIC_PATH" ]]; then
+        echo "gnmic is already installed at $GNMIC_PATH."
+    elif [[ -f "$LOCAL_GNMIC_PACKAGE" ]]; then
+        echo "Local gnmic package found. Installing gnmic from local file..."
+        sudo tar -xzf "$LOCAL_GNMIC_PACKAGE" -C /usr/local/bin
+        if [[ -f "$GNMIC_PATH" ]]; then
+            echo "gnmic installed successfully from local package."
+        else
+            echo "Failed to install gnmic from local package."
+            exit 1
+        fi
+    else
+        echo "Local package not found. Downloading gnmic from the web..."
+        curl -sLO $DOWNLOAD_URL
+        if [[ -f "$LOCAL_GNMIC_PACKAGE" ]]; then
+            sudo tar -xzf "$LOCAL_GNMIC_PACKAGE" -C /usr/local/bin
+            echo "gnmic downloaded and installed successfully."
+        else
+            echo "Failed to download gnmic."
+            exit 1
+        fi
+    fi
+}
+
+
 
 
 # Function to check if a service exists
@@ -204,6 +264,7 @@ prompt_for_reinstall() {
     done
 }
 
+
 # Function to restart a service
 restart_service() {
     service_name=$1
@@ -217,7 +278,6 @@ restart_service() {
     echo "Restarting $service_name..."
     sudo systemctl restart $service_name
     wait_for_service "$service_name"
-     main_menu
 }
 
 # Function to uninstall a service
@@ -250,11 +310,11 @@ install_opentelemetry_collector() {
     # Check if the package exists locally
     if [ ! -f "otelcol_0.111.0_linux_amd64.tar.gz" ]; then
         echo "Downloading OpenTelemetry Collector..."
-        wget https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.111.0/otelcol_0.111.0_linux_amd64.tar.gz
+        wget -O "$OTELCOL_PACKAGE" "$OTELCOL_URL"
     else
         echo "Found OpenTelemetry Collector package locally."
     fi
-
+    
     tar -xvf otelcol_0.111.0_linux_amd64.tar.gz
     sudo mv otelcol /usr/local/bin/otelcol
     sudo chmod +x /usr/local/bin/otelcol
@@ -320,14 +380,17 @@ install_prometheus() {
     # Check if the package exists locally
     if [ ! -f "prometheus-2.54.1.linux-amd64.tar.gz" ]; then
         echo "Downloading Prometheus..."
-        wget https://github.com/prometheus/prometheus/releases/download/v2.54.1/prometheus-2.54.1.linux-amd64.tar.gz
+        wget -O "$PROMETHEUS_PACKAGE" "$PROMETHEUS_URL"
+        tar -xvf "$PROMETHEUS_PACKAGE"
+                sudo mv prometheus /usr/local/bin/
+                sudo chmod +x /usr/local/bin/prometheus
+                sudo systemctl enable prometheus && sudo systemctl start prometheus
+                echo "Prometheus installed."
+    
     else
         echo "Found Prometheus package locally."
     fi
 
-    tar -xvf prometheus-2.54.1.linux-amd64.tar.gz
-    sudo mv prometheus-2.54.1.linux-amd64/prometheus /usr/local/bin/
-    sudo mv prometheus-2.54.1.linux-amd64/promtool /usr/local/bin/
 
     # Create Prometheus systemd service
     sudo bash -c 'cat > /etc/systemd/system/prometheus.service <<EOF
@@ -387,31 +450,6 @@ install_telegraf() {
 }
 
 
-# Function to download gnmic from local package if available, else download from the web
-download_gnmic() {
-    if [[ -f "$GNMIC_PATH" ]]; then
-        echo "gnmic is already installed at $GNMIC_PATH."
-    elif [[ -f "$LOCAL_GNMIC_PACKAGE" ]]; then
-        echo "Local gnmic package found. Installing gnmic from local file..."
-        sudo tar -xzf "$LOCAL_GNMIC_PACKAGE" -C /usr/local/bin
-        if [[ -f "$GNMIC_PATH" ]]; then
-            echo "gnmic installed successfully from local package."
-        else
-            echo "Failed to install gnmic from local package."
-            exit 1
-        fi
-    else
-        echo "Local package not found. Downloading gnmic from the web..."
-        curl -sLO $DOWNLOAD_URL
-        if [[ -f "$LOCAL_GNMIC_PACKAGE" ]]; then
-            sudo tar -xzf "$LOCAL_GNMIC_PACKAGE" -C /usr/local/bin
-            echo "gnmic downloaded and installed successfully."
-        else
-            echo "Failed to download gnmic."
-            exit 1
-        fi
-    fi
-}
 
 # Function to uninstall gnmic
 uninstall_gnmic() {
@@ -501,6 +539,7 @@ restart_all_services() {
     restart_service "otelcol"
     restart_service "telegraf"
     restart_service "prometheus"
+    main_menu
 }
 
 # Function to restart a specific service
@@ -617,5 +656,4 @@ restart_services_menu() {
 
 # Run the main menu
 main_menu
-
 
