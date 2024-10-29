@@ -66,24 +66,24 @@ Contact:
 For issues, feature requests, or further configuration help, contact surajsharma@juniper.net.
 ## End of User Instructions.
  ```bash
-root@q-dell-srv02:/suraj# git clone https://github.com/surajnsharma/telemetry.git \
-Cloning into 'telemetry'... remote: Enumerating objects: 37, done. \
-remote: Counting objects: 100% (15/15), done. remote: Compressing objects: 100% (8/8), done. \
-remote: Total 37 (delta 5), reused 14 (delta 5), pack-reused 22 (from 1) Receiving objects: 100% (37/37), 59.90 MiB | 58.14 MiB/s, done. \
-Resolving deltas: 100% (9/9), done. \
+root@q-dell-srv02:/suraj# git clone https://github.com/surajnsharma/telemetry.git 
+Cloning into 'telemetry'... remote: Enumerating objects: 37, done. 
+remote: Counting objects: 100% (15/15), done. remote: Compressing objects: 100% (8/8), done. 
+remote: Total 37 (delta 5), reused 14 (delta 5), pack-reused 22 (from 1) Receiving objects: 100% (37/37), 59.90 MiB | 58.14 MiB/s, done. 
+Resolving deltas: 100% (9/9), done. 
 
-root@q-dell-srv02:/suraj# cd telemetry/ \
-root@q-dell-srv02:~/suraj/telemetry# ls \
-config_telegraf.sh gnmic_0.38.2_linux_x86_64.tar.gz \
-gnmic_telemetry.log otelcol_0.111.0_linux_amd64.tar.gz \
-README.md setup_git_repo.sh test.sh config_telegraf.sh.org \
-gnmic.sh install.sh otel-collector-config.yaml \
-setup_telemetry.sh\
-telegraf_generated.conf \
-devices.text gnmic.sh.org \
-install.sh.org otelcol.log \
-sensor.text \
-telegraf.log\
+root@q-dell-srv02:/suraj# cd telemetry/ 
+root@q-dell-srv02:~/suraj/telemetry# ls 
+config_telegraf.sh gnmic_0.38.2_linux_x86_64.tar.gz 
+gnmic_telemetry.log otelcol_0.111.0_linux_amd64.tar.gz 
+README.md setup_git_repo.sh test.sh config_telegraf.sh.org 
+gnmic.sh install.sh otel-collector-config.yaml 
+setup_telemetry.sh
+telegraf_generated.conf 
+devices.text gnmic.sh.org 
+install.sh.org otelcol.log 
+sensor.text 
+telegraf.log
 
 ## update devices.text you want to collect telemetry data ##
 root@q-dell-srv01:~/suraj# cat devices.text 
@@ -92,14 +92,14 @@ username=root, password=Embe1mpls
 10.155.0.51:57400
 
 ## update sensor.text you are interested to collect telemetry ##
-root@q-dell-srv01:~/suraj# cat sensor.text \
-/junos/system/linecard/cpu/memory\
-/junos/system/linecard/firewall/\
-/junos/system/linecard/interface/\
-/junos/system/linecard/interface/logical/usage\
-/junos/system/linecard/packet/usage/\
-/interfaces/interface/state/\
-/junos/system/linecard/optics/\
+root@q-dell-srv01:~/suraj# cat sensor.text 
+/junos/system/linecard/cpu/memory
+/junos/system/linecard/firewall/
+/junos/system/linecard/interface/
+/junos/system/linecard/interface/logical/usage
+/junos/system/linecard/packet/usage/
+/interfaces/interface/state/
+/junos/system/linecard/optics/
 
 
 ## Install telemetry package ##
