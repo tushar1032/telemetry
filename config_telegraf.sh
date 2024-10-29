@@ -357,7 +357,7 @@ while true; do
     echo "Choose an action:"
     echo "1) Generate and apply Telegraf configuration"
     echo "2) Troubleshoot Telegraf"
-    echo "3) Back to main script (run_telemetry.sh)"
+    echo "3) Back to main script (setup_telemetry.sh)"
     read -p "Enter your choice: " choice
 
     case $choice in
