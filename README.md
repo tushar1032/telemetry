@@ -92,14 +92,14 @@ username=root, password=Embe1mpls
 10.155.0.51:57400
 
 ## update sensor.text you are interested to collect telemetry ##
-root@q-dell-srv01:~/suraj# cat sensor.text 
-/junos/system/linecard/cpu/memory
-/junos/system/linecard/firewall/
-/junos/system/linecard/interface/
-/junos/system/linecard/interface/logical/usage
-/junos/system/linecard/packet/usage/
-/interfaces/interface/state/
-/junos/system/linecard/optics/
+root@q-dell-srv01:~/suraj# cat sensor.text \
+/junos/system/linecard/cpu/memory\
+/junos/system/linecard/firewall/\
+/junos/system/linecard/interface/\
+/junos/system/linecard/interface/logical/usage\
+/junos/system/linecard/packet/usage/\
+/interfaces/interface/state/\
+/junos/system/linecard/optics/\
 
 
 ## Install telemetry package ##
