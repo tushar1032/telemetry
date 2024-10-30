@@ -68,7 +68,7 @@ For issues, feature requests, or further configuration help, contact surajsharma
 
 ```bash
 ## End of User Instructions.
-
+ ```bash
 root@q-dell-srv02:/suraj# git clone https://github.com/surajnsharma/telemetry.git 
 Cloning into 'telemetry'... remote: Enumerating objects: 37, done. 
 remote: Counting objects: 100% (15/15), done. remote: Compressing objects: 100% (8/8), done. 
@@ -129,6 +129,7 @@ Choose services to install:
    5) All
    6) Back to main menu 
 Enter your choice (e.g., 1 3 for Telegraf and OpenTelemetry): 5 
+
 
 telegraf is either not installed or not running. 
 Installing Telegraf... Hit:1 http://archive.ubuntu.com/ubuntu jammy 
