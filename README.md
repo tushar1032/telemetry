@@ -64,6 +64,9 @@ Ensure git, curl, and wget are installed. The script will install these if they 
 - Checking logs: View logs for each service in /var/log or use sudo journalctl -u <service-name> (e.g., journalctl -u prometheus).
 Contact:
 For issues, feature requests, or further configuration help, contact surajsharma@juniper.net.
+
+
+```bash
 ## End of User Instructions.
 
 root@q-dell-srv02:/suraj# git clone https://github.com/surajnsharma/telemetry.git 

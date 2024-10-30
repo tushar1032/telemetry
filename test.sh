@@ -1,166 +1,28 @@
 #!/bin/bash
 
-# Enable logging to a file
-LOG_FILE="setup_git_repo.log"
-exec > >(tee -i "$LOG_FILE")
-exec 2>&1
+# Define file paths
+input_file="gnmic_telemetry.log"
+cleaned_file="cleaned_telemetry.log"
 
-# Configuration files and size threshold for large files
-CONFIG_FILE=".git_config"
-LARGE_FILE_SIZE=100000000  # 100 MB (GitHub's limit for non-LFS files)
-
-# Load or prompt for GitHub user information
-load_or_prompt_user_info() {
-    if [ -f "$CONFIG_FILE" ]; then
-        source "$CONFIG_FILE"
-        echo "Current Git configuration:"
-        echo "GitHub Username: $GITHUB_USER"
-        echo "GitHub Email: $GITHUB_EMAIL"
-        echo "Repository Name: $REPO_NAME"
-        echo "Remote URL: git@github.com:$GITHUB_USER/$REPO_NAME.git"
-        echo -e "\nPress Enter to keep this configuration or type 'change' to update."
-        read -p "" choice
-    else
-        choice="change"
+# Step 1: Clean up file and extract JSON data from mixed log lines
+echo "[" > "$cleaned_file"
+while IFS= read -r line; do
+    # Only process lines that look like JSON but ignore those with non-JSON metadata
+    if echo "$line" | grep -Eq '^\s*[{"]'; then
+        echo "$line" | sed 's/,$//' >> "$cleaned_file"
     fi
+done < "$input_file"
+echo "]" >> "$cleaned_file"
+echo "Cleaned JSON-like data saved to $cleaned_file."
 
-    if [ "$choice" == "change" ] || [ -z "$GITHUB_USER" ] || [ -z "$GITHUB_EMAIL" ] || [ -z "$REPO_NAME" ]; then
-        while [[ -z "$GITHUB_USER" ]]; do
-            read -p "Enter your GitHub username (e.g., surajnsharma): " GITHUB_USER
-        done
-        while [[ -z "$GITHUB_EMAIL" ]]; do
-            read -p "Enter your GitHub email (e.g., surajshamra@juniper.net): " GITHUB_EMAIL
-        done
-        while [[ -z "$REPO_NAME" ]]; do
-            read -p "Enter the name of the repository (e.g., telemetry): " REPO_NAME
-        done
+# Step 2: Display header for the table
+echo -e "\nTelemetry Data Overview\n"
+echo -e "source              | prefix                                                         | Path          | values"
+echo -e "--------------------|---------------------------------------------------------------|---------------|-------"
 
-        # Save new configuration to .git_config file
-        echo "GITHUB_USER=\"$GITHUB_USER\"" > "$CONFIG_FILE"
-        echo "GITHUB_EMAIL=\"$GITHUB_EMAIL\"" >> "$CONFIG_FILE"
-        echo "REPO_NAME=\"$REPO_NAME\"" >> "$CONFIG_FILE"
-        echo "Configuration saved to $CONFIG_FILE"
-    fi
+# Step 3: Parse cleaned JSON and handle gRPC-like fields
+jq -r '.[] | select(.source and .prefix and .updates) |
+"\(.source) | \(.prefix) | \(.updates[].Path) | \(.updates[].values | to_entries | map(.key + \": \" + (.value | tostring)) | join(", "))"' "$cleaned_file" || echo "Parsing error or unexpected structure detected."
 
-    # Set global Git configurations if not already set
-    git config --global user.name "$GITHUB_USER"
-    git config --global user.email "$GITHUB_EMAIL"
-}
-
-# Load or prompt for GitHub user information
-load_or_prompt_user_info
-
-# Set default pull behavior to merge to prevent divergence issues
-git config pull.rebase false
-
-# Function to set the remote URL to HTTPS for pull or SSH for push
-set_remote_url() {
-    if [ "$1" == "pull" ]; then
-        REMOTE_URL="https://github.com/$GITHUB_USER/$REPO_NAME.git"
-    else
-        REMOTE_URL="git@github.com:$GITHUB_USER/$REPO_NAME.git"
-    fi
-    git remote set-url origin "$REMOTE_URL"
-}
-
-# Function to manage SSH keys
-setup_ssh_key() {
-    # Check if SSH key exists; generate if missing
-    if [ ! -f "$HOME/.ssh/id_ed25519" ]; then
-        echo "Generating SSH key..."
-        ssh-keygen -t ed25519 -C "$GITHUB_EMAIL" -f "$HOME/.ssh/id_ed25519" -q -N ""
-        if [ $? -ne 0 ]; then
-            echo "Failed to generate SSH key. Please check your permissions and try again."
-            exit 1
-        fi
-        echo "SSH key generated."
-    else
-        echo "SSH key already exists. Key location: $HOME/.ssh/id_ed25519"
-    fi
-
-    # Display SSH key and prompt to add to GitHub if not added
-    echo "Copy the SSH key below and add it to your GitHub account under Settings > SSH and GPG keys > New SSH key:"
-    cat "$HOME/.ssh/id_ed25519.pub"
-    echo -e "\nPress Enter after adding the SSH key to GitHub..."
-    read -p ""
-
-    # Test SSH connection to GitHub
-    echo "Testing SSH connection to GitHub..."
-    SSH_OUTPUT=$(ssh -T git@github.com 2>&1)
-    if [[ "$SSH_OUTPUT" == *"You've successfully authenticated"* ]]; then
-        echo "SSH connection to GitHub was successful."
-    elif [[ "$SSH_OUTPUT" == *"Permission denied (publickey)"* ]]; then
-        echo "SSH connection to GitHub failed due to missing public key."
-        echo "Please ensure your SSH key is added to your GitHub account under Settings > SSH and GPG keys > New SSH key."
-        echo "Copy the SSH key below and add it to your GitHub account:"
-        cat "$HOME/.ssh/id_ed25519.pub"
-        echo -e "\nAfter adding the SSH key, re-run the script.\n"
-        exit 1
-    else
-        echo "SSH connection to GitHub failed. Ensure the SSH key is added to your GitHub account."
-        echo "Output from SSH: $SSH_OUTPUT"
-        exit 1
-    fi
-}
-
-# Ask user if they want to update (pull) or push changes
-echo "Choose an action:"
-echo "1) Update (pull latest changes)"
-echo "2) Push new changes (requires SSH access)"
-read -p "Enter your choice (1 for update, 2 for push): " user_action
-
-# Function to track large files with Git LFS
-track_large_files_with_lfs() {
-    echo "Checking for files larger than $(($LARGE_FILE_SIZE / 1000000)) MB to track with Git LFS..."
-    find . -type f -size +${LARGE_FILE_SIZE}c -not -path "./.git/*" | while read -r large_file; do
-        echo "Tracking large file with Git LFS: $large_file"
-        git lfs track "$large_file"
-        git add .gitattributes
-        git add "$large_file"
-        git commit -m "Track large file $large_file with Git LFS"
-    done
-}
-
-if [ "$user_action" == "1" ]; then
-    # Set remote to HTTPS for pulling
-    set_remote_url "pull"
-
-    # Automatically resolve conflicts by resetting any unmerged changes
-    echo "Resetting any unmerged changes..."
-    git reset --hard
-    
-    # Pull latest changes from the remote repository
-    echo "Pulling latest changes from remote..."
-    git pull origin main --strategy-option=theirs
-    if [ $? -ne 0 ]; then
-        echo "Failed to pull changes from the remote repository. Please resolve any issues and try again."
-        exit 1
-    fi
-    echo "Local repository successfully updated."
-    exit 0  # Exit after updating
-fi
-
-# Proceed with SSH setup if the user chose to push changes
-if [ "$user_action" == "2" ]; then
-    # Set remote to SSH for pushing
-    set_remote_url "push"
-    
-    # SSH setup for pushing (only for admins)
-    setup_ssh_key
-
-    # Track large files automatically with Git LFS
-    track_large_files_with_lfs
-
-    # Stage and push changes
-    echo "Staging and committing changes..."
-    git add .
-    git commit -m "Auto-commit: updating remote repository"
-    git push origin main
-    if [ $? -ne 0 ]; then
-        echo "Failed to push changes. Please check your SSH key configuration."
-        exit 1
-    fi
-    echo "Changes successfully pushed to the remote repository."
-fi
-
+echo -e "\nEnd of Telemetry Data"
 
