@@ -38,9 +38,9 @@ check_service_status() {
 }
 
 # Get URLs from user input or use defaults
-GNMIC_URL=$(get_download_url "Enter gnmic download URL" "$DEFAULT_GNMIC_URL")
-PROMETHEUS_URL=$(get_download_url "Enter Prometheus download URL" "$DEFAULT_PROMETHEUS_URL")
-OTELCOL_URL=$(get_download_url "Enter OpenTelemetry Collector download URL" "$DEFAULT_OTELCOL_URL")
+#GNMIC_URL=$(get_download_url "Enter gnmic download URL" "$DEFAULT_GNMIC_URL")
+#PROMETHEUS_URL=$(get_download_url "Enter Prometheus download URL" "$DEFAULT_PROMETHEUS_URL")
+#OTELCOL_URL=$(get_download_url "Enter OpenTelemetry Collector download URL" "$DEFAULT_OTELCOL_URL")
 
 # Function to derive filename from URL
 get_filename_from_url() {
@@ -277,8 +277,102 @@ restart_service() {
 
     echo "Restarting $service_name..."
     sudo systemctl restart $service_name
-    wait_for_service "$service_name"
+
+    # Check if the service restarted successfully
+    if systemctl is-active --quiet $service_name; then
+        echo -e "\e[32m$service_name restarted successfully.\e[0m"
+    else
+        echo -e "\e[31mFailed to restart $service_name.\e[0m"
+        return 1
+    fi
 }
+
+
+# Function to start a service
+start_service() {
+    service_name=$1
+
+    # Check if service exists
+    if ! check_service_exists "$service_name"; then
+        echo "Skipping start for $service_name since it does not exist."
+        return 1
+    fi
+
+    echo "Starting $service_name..."
+    sudo systemctl start $service_name
+
+    # Check if the service started successfully
+    if systemctl is-active --quiet $service_name; then
+        echo -e "\e[32m$service_name started successfully.\e[0m"
+    else
+        echo -e "\e[31mFailed to start $service_name.\e[0m"
+        return 1
+    fi
+}
+
+
+# Function to stop a service
+stop_service() {
+    service_name=$1
+
+    # Check if service exists
+    if ! check_service_exists "$service_name"; then
+        echo "Skipping stop for $service_name since it does not exist."
+        return 1
+    fi
+
+    echo "Stopping $service_name..."
+    sudo systemctl stop $service_name
+
+    # Check if the service has successfully stopped
+    if systemctl is-active --quiet $service_name; then
+        echo -e "\e[31mFailed to stop $service_name.\e[0m"
+        return 1
+    else
+        echo -e "\e[32m$service_name has been stopped successfully.\e[0m"
+        return 0
+    fi
+}
+
+
+# Function to restart all services
+restart_all_services() {
+    restart_service "otelcol"
+    restart_service "telegraf"
+    restart_service "prometheus"
+    main_menu
+}
+# Function to restart all services
+stop_all_services() {
+    stop_service "otelcol"
+    stop_service "telegraf"
+    stop_service "prometheus"
+    main_menu
+}
+# Function to restart all services
+start_all_services() {
+    start_service "otelcol"
+    start_service "telegraf"
+    start_service "prometheus"
+    main_menu
+}
+
+# Function to restart a specific service
+restart_one_service() {
+    read -p "Enter service name (otelcol/telegraf/prometheus): " service_name
+    restart_service "$service_name"
+}
+# Function to restart a specific service
+stop_one_service() {
+    read -p "Enter service name (otelcol/telegraf/prometheus): " service_name
+    stop_service "$service_name"
+}
+# Function to restart a specific service
+start_one_service() {
+    read -p "Enter service name (otelcol/telegraf/prometheus): " service_name
+    start_service "$service_name"
+}
+
 
 # Function to uninstall a service
 uninstall_service() {
@@ -296,7 +390,7 @@ uninstall_service() {
 }
 
 
-#!/bin/bash
+
 
 # Function to install OpenTelemetry Collector and store sample YAML
 install_opentelemetry_collector() {
@@ -534,19 +628,6 @@ check_services_status() {
      main_menu
 }
 
-# Function to restart all services
-restart_all_services() {
-    restart_service "otelcol"
-    restart_service "telegraf"
-    restart_service "prometheus"
-    main_menu
-}
-
-# Function to restart a specific service
-restart_one_service() {
-    read -p "Enter service name (otelcol/telegraf/prometheus): " service_name
-    restart_service "$service_name"
-}
 
 # Function to provide troubleshooting steps for Telegraf
 troubleshoot_telegraf() {
@@ -577,7 +658,20 @@ troubleshoot_telegraf() {
 }
 
 
+
+
+# Function to install services
 install_services() {
+    # Only prompt for URLs when the user chooses to install services
+    GNMIC_URL=$(get_download_url "Enter gnmic download URL" "$DEFAULT_GNMIC_URL")
+    PROMETHEUS_URL=$(get_download_url "Enter Prometheus download URL" "$DEFAULT_PROMETHEUS_URL")
+    OTELCOL_URL=$(get_download_url "Enter OpenTelemetry Collector download URL" "$DEFAULT_OTELCOL_URL")
+
+    # Derived filenames from URLs
+    GNMIC_PACKAGE=$(get_filename_from_url "$GNMIC_URL")
+    PROMETHEUS_PACKAGE=$(get_filename_from_url "$PROMETHEUS_URL")
+    OTELCOL_PACKAGE=$(get_filename_from_url "$OTELCOL_URL")
+
     while true; do
         echo "Choose services to install:"
         echo "1) Telegraf"
@@ -609,6 +703,8 @@ install_services() {
     done
 }
 
+
+
 # Main menu
 main_menu() {
     echo "Choose an action:"
@@ -616,16 +712,20 @@ main_menu() {
     echo "2) Uninstall services"
     echo "3) Check status of services"
     echo "4) Restart services"
-    echo "5) Troubleshooting"
-    echo "6) Back to main script (run_telemetry.sh)"
+    echo "5) Stop services"
+    echo "6) Start services"
+    echo "7) Troubleshooting"
+    echo "8) Back to main script (run_telemetry.sh)"
     read -p "Enter your choice: " user_choice
     case $user_choice in
         1) install_services ;;
         2) uninstall_services ;;
         3) check_services_status ;;
         4) restart_services_menu ;;
-        5) troubleshoot_telegraf ;;
-        6) echo "Returning to main script..."; exit 0 ;;  # Exits install.sh
+        5) stop_services_menu ;;
+        6) start_services_menu ;;
+        7) troubleshoot_telegraf ;;
+        8) echo "Returning to main script..."; exit 0 ;;  # Exits install.sh
         *) echo "Invalid choice." ;;
     esac
 }
@@ -654,6 +754,56 @@ restart_services_menu() {
     main_menu
 }
 
+# Menu for Stop services
+stop_services_menu() {
+    echo "Would you like to stop all services or one specific service?"
+    read -p "Enter 'all' or 'one' (default is 'all'): " stop_choice
+
+    # Set default to 'all' if user presses Enter
+    stop_choice=${stop_choice:-all}
+
+    case "$stop_choice" in
+        all)
+            stop_all_services
+            ;;
+        one)
+            stop_one_service
+            ;;
+        *)
+            echo "Invalid input. Defaulting to 'all'."
+            stop_all_services
+            ;;
+    esac
+    main_menu
+}
+
+# Menu for Start services
+start_services_menu() {
+    echo "Would you like to start all services or one specific service?"
+    read -p "Enter 'all' or 'one' (default is 'all'): " stop_choice
+
+    # Set default to 'all' if user presses Enter
+    start_choice=${start_choice:-all}
+
+    case "$stop_choice" in
+        all)
+            start_all_services
+            ;;
+        one)
+            start_one_service
+            ;;
+        *)
+            echo "Invalid input. Defaulting to 'all'."
+            start_all_services
+            ;;
+    esac
+    main_menu
+}
+
+
+
 # Run the main menu
 main_menu
+
+
 
