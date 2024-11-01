@@ -189,7 +189,15 @@ elif [ "$user_action" == "2" ]; then
     track_large_files_with_lfs
     git add .
     git commit -m "Auto-commit: updating remote repository"
-    git push origin main
+    if ! git push origin main; then
+        echo "Push failed. The remote branch may have new commits."
+        read -p "Would you like to force push? This will overwrite the remote history. Type 'yes' to proceed: " force_push_confirmation
+        if [ "$force_push_confirmation" == "yes" ]; then
+            git push origin main --force
+        else
+            echo "Push canceled. Please pull the latest changes before pushing again."
+        fi
+    fi
 elif [ "$user_action" == "3" ]; then
     delete_git_repo
 elif [ "$user_action" == "4" ]; then
@@ -198,5 +206,4 @@ else
     echo "Invalid choice. Exiting."
     exit 1
 fi
-
 
