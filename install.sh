@@ -477,6 +477,8 @@ install_prometheus() {
         echo "Downloading Prometheus..."
         wget -O "$PROMETHEUS_PACKAGE" "$PROMETHEUS_URL"
         tar -xvf "$PROMETHEUS_PACKAGE"
+        PROMETHEUS_DIR="${PROMETHEUS_PACKAGE%.tar.gz}"
+        echo "this is the name of the directory $PROMETHEUS_DIR"
                 sudo mv $PROMETHEUS_DIR /usr/local/bin/
                 sudo mv /usr/local/bin/$PROMETHEUS_DIR/* /usr/local/bin
                 sudo chmod +x /usr/local/bin/prometheus
