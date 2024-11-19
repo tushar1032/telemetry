@@ -476,7 +476,8 @@ install_prometheus() {
         echo "Downloading Prometheus..."
         wget -O "$PROMETHEUS_PACKAGE" "$PROMETHEUS_URL"
         tar -xvf "$PROMETHEUS_PACKAGE"
-                sudo mv prometheus /usr/local/bin/
+                sudo mv $PROMETHEUS_PACKAGE /usr/local/bin/
+                sudo mv /usr/local/bin/$PROMETHEUS_PACKAGE/* /usr/local/bin
                 sudo chmod +x /usr/local/bin/prometheus
                 sudo systemctl enable prometheus && sudo systemctl start prometheus
                 echo "Prometheus installed."
