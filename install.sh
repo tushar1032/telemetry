@@ -51,6 +51,7 @@ get_filename_from_url() {
 # Derived filenames from URLs
 GNMIC_PACKAGE=$(get_filename_from_url "$GNMIC_URL")
 PROMETHEUS_PACKAGE=$(get_filename_from_url "$PROMETHEUS_URL")
+PROMETHEUS_DIR="${PROMETHEUS_PACKAGE%.tar.gz}"
 OTELCOL_PACKAGE=$(get_filename_from_url "$OTELCOL_URL")
 
 
@@ -476,8 +477,8 @@ install_prometheus() {
         echo "Downloading Prometheus..."
         wget -O "$PROMETHEUS_PACKAGE" "$PROMETHEUS_URL"
         tar -xvf "$PROMETHEUS_PACKAGE"
-                sudo mv $PROMETHEUS_PACKAGE /usr/local/bin/
-                sudo mv /usr/local/bin/$PROMETHEUS_PACKAGE/* /usr/local/bin
+                sudo mv $PROMETHEUS_DIR /usr/local/bin/
+                sudo mv /usr/local/bin/$PROMETHEUS_DIR/* /usr/local/bin
                 sudo chmod +x /usr/local/bin/prometheus
                 sudo systemctl enable prometheus && sudo systemctl start prometheus
                 echo "Prometheus installed."
